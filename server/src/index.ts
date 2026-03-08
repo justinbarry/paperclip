@@ -372,10 +372,14 @@ if (config.databaseUrl) {
   startupDbInfo = { mode: "embedded-postgres", dataDir, port };
 }
 
-if (config.deploymentMode === "local_trusted" && !isLoopbackHost(config.host)) {
+if (
+  config.deploymentMode === "local_trusted" &&
+  !isLoopbackHost(config.host) &&
+  process.env.ALLOW_LOCAL_TRUSTED_NON_LOOPBACK !== "true"
+) {
   throw new Error(
     `local_trusted mode requires loopback host binding (received: ${config.host}). ` +
-      "Use authenticated mode for non-loopback deployments.",
+      "Use authenticated mode for non-loopback deployments, or set ALLOW_LOCAL_TRUSTED_NON_LOOPBACK=true to override.",
   );
 }
 
