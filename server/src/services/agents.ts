@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
 import {
   agents,
@@ -591,6 +591,19 @@ export function agentService(db: Db) {
         currentId = mgr.reportsTo ?? null;
       }
       return chain;
+    },
+
+    isInSubtree: async (ancestorId: string, candidateId: string): Promise<boolean> => {
+      if (ancestorId === candidateId) return true;
+      const result = await db.execute(sql`
+        WITH RECURSIVE chain AS (
+          SELECT id, reports_to FROM agents WHERE id = ${candidateId}
+          UNION ALL
+          SELECT a.id, a.reports_to FROM agents a INNER JOIN chain c ON a.id = c.reports_to
+        )
+        SELECT 1 AS found FROM chain WHERE id = ${ancestorId} LIMIT 1
+      `);
+      return result.length > 0;
     },
 
     runningForAgent: (agentId: string) =>

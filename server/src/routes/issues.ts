@@ -114,6 +114,17 @@ export function issueRoutes(db: Db, storage: StorageService) {
     throw unauthorized();
   }
 
+  async function assertAssigneeInSubtree(req: Request, assigneeAgentId: string | null | undefined) {
+    if (!assigneeAgentId) return;
+    if (req.actor.type !== "agent" || !req.actor.agentId) return;
+    const actorAgent = await agentsSvc.getById(req.actor.agentId);
+    if (!actorAgent || actorAgent.role === "ceo") return;
+    const inSubtree = await agentsSvc.isInSubtree(actorAgent.id, assigneeAgentId);
+    if (!inSubtree) {
+      throw forbidden("Cannot assign tasks to agents outside your org chart subtree");
+    }
+  }
+
   function requireAgentRunId(req: Request, res: Response) {
     if (req.actor.type !== "agent") return null;
     const runId = req.actor.runId?.trim();
@@ -424,6 +435,7 @@ export function issueRoutes(db: Db, storage: StorageService) {
     assertCompanyAccess(req, companyId);
     if (req.body.assigneeAgentId || req.body.assigneeUserId) {
       await assertCanAssignTasks(req, companyId);
+      await assertAssigneeInSubtree(req, req.body.assigneeAgentId);
     }
 
     // Agents creating top-level tasks (no parentId) need canCreateTasks permission
@@ -507,6 +519,7 @@ export function issueRoutes(db: Db, storage: StorageService) {
     if (assigneeWillChange) {
       if (!isAgentReturningIssueToCreator) {
         await assertCanAssignTasks(req, existing.companyId);
+        await assertAssigneeInSubtree(req, req.body.assigneeAgentId);
       }
     }
     if (!(await assertAgentRunCheckoutOwnership(req, res, existing))) return;
