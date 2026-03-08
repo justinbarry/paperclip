@@ -147,12 +147,20 @@ export async function createApp(
   if (opts.uiMode === "vite-dev") {
     const uiRoot = path.resolve(__dirname, "../../ui");
     const { createServer: createViteServer } = await import("vite");
+    // In local_trusted mode, always allow configured hostnames for Vite's host check.
+    // In authenticated/private mode, use the private hostname gate's allow set.
+    const viteAllowedHosts =
+      opts.deploymentMode === "local_trusted"
+        ? Array.from(privateHostnameAllowSet)
+        : privateHostnameGateEnabled
+          ? Array.from(privateHostnameAllowSet)
+          : undefined;
     const vite = await createViteServer({
       root: uiRoot,
       appType: "spa",
       server: {
         middlewareMode: true,
-        allowedHosts: privateHostnameGateEnabled ? Array.from(privateHostnameAllowSet) : undefined,
+        allowedHosts: viteAllowedHosts,
       },
     });
 
