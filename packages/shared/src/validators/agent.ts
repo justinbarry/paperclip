@@ -98,6 +98,9 @@ export type TestAdapterEnvironment = z.infer<typeof testAdapterEnvironmentSchema
 export const updateAgentPermissionsSchema = z.object({
   canCreateAgents: z.boolean().optional(),
   canCreateTasks: z.boolean().optional(),
-});
+}).refine(
+  (data) => data.canCreateAgents !== undefined || data.canCreateTasks !== undefined,
+  { message: "At least one permission field must be provided" },
+);
 
 export type UpdateAgentPermissions = z.infer<typeof updateAgentPermissionsSchema>;

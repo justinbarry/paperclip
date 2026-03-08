@@ -431,7 +431,7 @@ export function issueRoutes(db: Db, storage: StorageService) {
     if (req.actor.type === "agent") {
       if (req.body.parentId) {
         const parent = await svc.getById(req.body.parentId);
-        if (!parent) {
+        if (!parent || parent.companyId !== companyId) {
           res.status(400).json({ error: "parentId references a non-existent issue" });
           return;
         }
