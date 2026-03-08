@@ -376,8 +376,8 @@ export function AgentDetail() {
   });
 
   const updatePermissions = useMutation({
-    mutationFn: (canCreateAgents: boolean) =>
-      agentsApi.updatePermissions(agentLookupRef, { canCreateAgents }, resolvedCompanyId ?? undefined),
+    mutationFn: (perms: { canCreateAgents?: boolean; canCreateTasks?: boolean }) =>
+      agentsApi.updatePermissions(agentLookupRef, perms, resolvedCompanyId ?? undefined),
     onSuccess: () => {
       setActionError(null);
       queryClient.invalidateQueries({ queryKey: queryKeys.agents.detail(routeAgentRef) });
@@ -1045,7 +1045,7 @@ function AgentConfigurePage({
   onSaveActionChange: (save: (() => void) | null) => void;
   onCancelActionChange: (cancel: (() => void) | null) => void;
   onSavingChange: (saving: boolean) => void;
-  updatePermissions: { mutate: (canCreate: boolean) => void; isPending: boolean };
+  updatePermissions: { mutate: (perms: { canCreateAgents?: boolean; canCreateTasks?: boolean }) => void; isPending: boolean };
 }) {
   const queryClient = useQueryClient();
   const [revisionsOpen, setRevisionsOpen] = useState(false);
@@ -1151,7 +1151,7 @@ function ConfigurationTab({
   onSaveActionChange: (save: (() => void) | null) => void;
   onCancelActionChange: (cancel: (() => void) | null) => void;
   onSavingChange: (saving: boolean) => void;
-  updatePermissions: { mutate: (canCreate: boolean) => void; isPending: boolean };
+  updatePermissions: { mutate: (perms: { canCreateAgents?: boolean; canCreateTasks?: boolean }) => void; isPending: boolean };
 }) {
   const queryClient = useQueryClient();
 
@@ -1202,11 +1202,25 @@ function ConfigurationTab({
               size="sm"
               className="h-7 px-2.5 text-xs"
               onClick={() =>
-                updatePermissions.mutate(!Boolean(agent.permissions?.canCreateAgents))
+                updatePermissions.mutate({ canCreateAgents: !Boolean(agent.permissions?.canCreateAgents) })
               }
               disabled={updatePermissions.isPending}
             >
               {agent.permissions?.canCreateAgents ? "Enabled" : "Disabled"}
+            </Button>
+          </div>
+          <div className="flex items-center justify-between text-sm mt-2">
+            <span>Can create new tasks</span>
+            <Button
+              variant={agent.permissions?.canCreateTasks ? "default" : "outline"}
+              size="sm"
+              className="h-7 px-2.5 text-xs"
+              onClick={() =>
+                updatePermissions.mutate({ canCreateTasks: !Boolean(agent.permissions?.canCreateTasks) })
+              }
+              disabled={updatePermissions.isPending}
+            >
+              {agent.permissions?.canCreateTasks ? "Enabled" : "Disabled"}
             </Button>
           </div>
         </div>
