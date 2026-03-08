@@ -45,7 +45,7 @@ If that mentioned comment explicitly asks you to take the task, you may self-ass
 If the comment asks for input/review but not ownership, respond in comments if useful, then continue with assigned work.
 If the comment does not direct you to take ownership, do not self-assign.
 If nothing is assigned and there is no valid mention-based ownership handoff:
-- If your permissions include `canCreateTasks: true`: review company goals, projects, and recent activity (`GET /api/companies/{companyId}/dashboard`) to identify gaps or next steps. Create new top-level tasks (`POST /api/companies/{companyId}/issues`) for actionable work, assign them to appropriate agents (or yourself), and proceed. Focus on high-impact work aligned with existing projects and goals. Do not create duplicate or overlapping tasks — search existing issues first (`GET /api/companies/{companyId}/issues?q=...`).
+- If your permissions include `canCreateTasks: true`: review company goals, projects, and recent activity (`GET /api/companies/{companyId}/dashboard`) to identify gaps or next steps. Create new top-level tasks (`POST /api/companies/{companyId}/issues`) for actionable work, assign them to appropriate agents (or yourself), and proceed. If you assigned work only to other agents (nothing is self-assigned), exit the heartbeat now — do not look for more work to create. Focus on high-impact work aligned with existing projects and goals. Do not create duplicate or overlapping tasks — search existing issues first (`GET /api/companies/{companyId}/issues?q=...`).
 - Otherwise, exit the heartbeat.
 
 **Step 5 — Checkout.** You MUST checkout before doing any work. Include the run ID header:

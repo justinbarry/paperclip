@@ -426,8 +426,10 @@ export function issueRoutes(db: Db, storage: StorageService) {
       await assertCanAssignTasks(req, companyId);
     }
 
-    // Agents creating top-level tasks (no parentId) need canCreateTasks permission
-    // Also validate parentId exists if provided, to prevent bypassing the gate with a bogus parentId
+    // Agents creating top-level tasks (no parentId) need canCreateTasks permission.
+    // Uses grant-based check first, falling back to permission object — same two-tier pattern
+    // as assertCanAssignTasks. canCreateAgents in the hiring route will be migrated to match.
+    // Also validate parentId exists if provided, to prevent bypassing the gate with a bogus parentId.
     if (req.actor.type === "agent") {
       if (req.body.parentId) {
         const parent = await svc.getById(req.body.parentId);

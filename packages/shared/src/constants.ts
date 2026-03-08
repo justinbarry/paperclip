@@ -242,7 +242,7 @@ export const PERMISSION_KEYS = [
   "users:manage_permissions",
   "tasks:assign",
   "tasks:assign_scope",
-  "tasks:create",
+  "tasks:create", // agent-only: human users can always create tasks
   "joins:approve",
 ] as const;
 export type PermissionKey = (typeof PERMISSION_KEYS)[number];
