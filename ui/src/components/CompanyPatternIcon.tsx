@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Pause } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const BAYER_4X4 = [
@@ -12,6 +13,7 @@ interface CompanyPatternIconProps {
   companyName: string;
   brandColor?: string | null;
   className?: string;
+  paused?: boolean;
 }
 
 function hashString(value: string): number {
@@ -159,7 +161,7 @@ function makeCompanyPatternDataUrl(seed: string, brandColor?: string | null, log
   return canvas.toDataURL("image/png");
 }
 
-export function CompanyPatternIcon({ companyName, brandColor, className }: CompanyPatternIconProps) {
+export function CompanyPatternIcon({ companyName, brandColor, paused, className }: CompanyPatternIconProps) {
   const initial = companyName.trim().charAt(0).toUpperCase() || "?";
   const patternDataUrl = useMemo(
     () => makeCompanyPatternDataUrl(companyName.trim().toLowerCase(), brandColor),
@@ -170,6 +172,7 @@ export function CompanyPatternIcon({ companyName, brandColor, className }: Compa
     <div
       className={cn(
         "relative flex items-center justify-center w-11 h-11 text-base font-semibold text-white overflow-hidden",
+        paused && "opacity-50 grayscale",
         className,
       )}
     >
@@ -187,6 +190,11 @@ export function CompanyPatternIcon({ companyName, brandColor, className }: Compa
       <span className="relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]">
         {initial}
       </span>
+      {paused && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+          <Pause className="h-5 w-5 text-white" />
+        </div>
+      )}
     </div>
   );
 }
