@@ -155,6 +155,16 @@ export function CompanySettings() {
     }
   });
 
+  const heartbeatMutation = useMutation({
+    mutationFn: ({ action, companyId }: { action: "pause" | "resume"; companyId: string }) =>
+      action === "pause"
+        ? companiesApi.pause(companyId)
+        : companiesApi.resume(companyId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+    }
+  });
+
   useEffect(() => {
     setBreadcrumbs([
       { label: selectedCompany?.name ?? "Company", href: "/dashboard" },
@@ -375,6 +385,57 @@ export function CompanySettings() {
                 </div>
               </div>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Heartbeat Control */}
+      <div className="space-y-4">
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Heartbeat Control
+        </div>
+        <div className="space-y-3 rounded-md border border-border px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">
+                {selectedCompany.status === "paused" ? "Heartbeat Paused" : "Heartbeat Active"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {selectedCompany.status === "paused"
+                  ? "Agent heartbeats are paused. No automatic runs will be triggered."
+                  : "Agent heartbeats are running normally."}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={selectedCompany.status === "paused" ? "default" : "secondary"}
+              disabled={heartbeatMutation.isPending}
+              onClick={() => {
+                if (!selectedCompanyId) return;
+                if (selectedCompany.status === "paused") {
+                  heartbeatMutation.mutate({ action: "resume", companyId: selectedCompanyId });
+                } else {
+                  const confirmed = window.confirm(
+                    `Pause heartbeat for "${selectedCompany.name}"? This will stop automatic agent runs.`
+                  );
+                  if (!confirmed) return;
+                  heartbeatMutation.mutate({ action: "pause", companyId: selectedCompanyId });
+                }
+              }}
+            >
+              {heartbeatMutation.isPending
+                ? "..."
+                : selectedCompany.status === "paused"
+                ? "Resume Heartbeat"
+                : "Pause Heartbeat"}
+            </Button>
+          </div>
+          {heartbeatMutation.isError && (
+            <p className="text-xs text-destructive">
+              {heartbeatMutation.error instanceof Error
+                ? heartbeatMutation.error.message
+                : "Failed to update heartbeat status"}
+            </p>
           )}
         </div>
       </div>

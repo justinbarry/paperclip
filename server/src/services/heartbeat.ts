@@ -12,6 +12,7 @@ import {
   costEvents,
   issues,
   projectWorkspaces,
+  companies,
 } from "@paperclipai/db";
 import { conflict, notFound } from "../errors.js";
 import { logger } from "../middleware/logger.js";
@@ -2206,12 +2207,19 @@ export function heartbeatService(db: Db) {
     reapOrphanedRuns,
 
     tickTimers: async (now = new Date()) => {
-      const allAgents = await db.select().from(agents);
+      const allAgents = await db
+        .select({ agent: agents, company: companies })
+        .from(agents)
+        .innerJoin(companies, eq(agents.companyId, companies.id));
       let checked = 0;
       let enqueued = 0;
       let skipped = 0;
 
-      for (const agent of allAgents) {
+      for (const row of allAgents) {
+        const agent = row.agent;
+        const company = row.company;
+        // Skip if company heartbeat is paused
+        if (company.status === "paused" || company.status === "suspended") continue;
         if (agent.status === "paused" || agent.status === "terminated" || agent.status === "pending_approval") continue;
         const policy = parseHeartbeatPolicy(agent);
         if (!policy.enabled || policy.intervalSec <= 0) continue;
