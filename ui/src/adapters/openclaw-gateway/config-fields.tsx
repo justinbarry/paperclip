@@ -4,6 +4,7 @@ import type { AdapterConfigFieldsProps } from "../types";
 import {
   Field,
   DraftInput,
+  DraftTextarea,
   help,
 } from "../../components/agent-config-primitives";
 
@@ -52,6 +53,15 @@ function parseScopes(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
+function getPayloadTemplateMessage(config: Record<string, unknown>): string {
+  const payloadTemplate = config.payloadTemplate;
+  if (typeof payloadTemplate === "object" && payloadTemplate !== null) {
+    const msg = (payloadTemplate as Record<string, unknown>).message;
+    if (typeof msg === "string") return msg;
+  }
+  return "";
+}
+
 export function OpenClawGatewayConfigFields({
   isCreate,
   values,
@@ -84,6 +94,24 @@ export function OpenClawGatewayConfigFields({
       delete nextHeaders["x-openclaw-auth"];
     }
     mark("adapterConfig", "headers", Object.keys(nextHeaders).length > 0 ? nextHeaders : undefined);
+  };
+
+  const commitPayloadTemplateMessage = (v: string) => {
+    const existingTemplate =
+      typeof config.payloadTemplate === "object" && config.payloadTemplate !== null
+        ? (config.payloadTemplate as Record<string, unknown>)
+        : {};
+    if (v.trim()) {
+      mark("adapterConfig", "payloadTemplate", { ...existingTemplate, message: v });
+    } else {
+      const rest = { ...existingTemplate };
+      delete rest.message;
+      mark(
+        "adapterConfig",
+        "payloadTemplate",
+        Object.keys(rest).length > 0 ? rest : undefined,
+      );
+    }
   };
 
   const sessionStrategy = eff(
@@ -209,6 +237,18 @@ export function OpenClawGatewayConfigFields({
               Always enabled for gateway agents. Paperclip persists a device key during onboarding so pairing approvals
               remain stable across runs.
             </div>
+          </Field>
+
+          <Field
+            label="Heartbeat message"
+            hint="Prepended to the wake text sent to the agent on each heartbeat. Use this for identity (SOUL) and loop definition (HEARTBEAT) content."
+          >
+            <DraftTextarea
+              value={eff("adapterConfig", "payloadTemplate.message", getPayloadTemplateMessage(config))}
+              onCommit={commitPayloadTemplateMessage}
+              minRows={6}
+              placeholder={"You are the CEO. Your mission is...\n\nOn each heartbeat:\n1. Check executive status\n2. Review metrics\n3. Reprioritize..."}
+            />
           </Field>
         </>
       )}
